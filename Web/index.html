@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workbody · 图书馆空位查询与预约</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ==================== 顶部导航栏 ==================== -->
+<header class="header">
+    <div class="header-inner">
+        <div class="logo">
+            <span class="logo-icon">📚</span>
+            <span class="logo-text">Workbody</span>
+            <span class="logo-sub">图书馆空位查询与预约</span>
+        </div>
+        <nav class="nav">
+            <a href="#overview" class="nav-link active" data-target="overview">空位总览</a>
+            <a href="#floor-detail" class="nav-link" data-target="floor-detail">楼层详情</a>
+            <a href="#reserve" class="nav-link" data-target="reserve">座位预约</a>
+            <a href="#tips" class="nav-link" data-target="tips">使用须知</a>
+        </nav>
+        <button class="menu-toggle" id="menuToggle" aria-label="菜单">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+</header>
+
+<!-- ==================== 智能推荐横幅 ==================== -->
+<section class="recommend-banner" id="recommendBanner">
+    <div class="recommend-content">
+        <span class="recommend-icon">💡</span>
+        <div class="recommend-text">
+            <span class="recommend-label">智能推荐</span>
+            <span class="recommend-desc" id="recommendDesc">正在为您计算最佳自习区...</span>
+        </div>
+    </div>
+    <button class="recommend-go" id="recommendGo">前往该楼层 →</button>
+</section>
+
+<!-- ==================== 核心板块1：全校楼层空位数据看板 ==================== -->
+<section class="section" id="overview">
+    <div class="section-header">
+        <h2 class="section-title">🏠 楼层空位总览</h2>
+        <button class="btn-refresh" id="btnRefresh">
+            <span class="refresh-icon">🔄</span> 刷新数据
+        </button>
+    </div>
+    <p class="section-desc">实时展示各楼层座位使用情况，绿色=空闲、黄色=适中、红色=拥挤</p>
+
+    <!-- 全校数据汇总条 -->
+    <div class="summary-bar" id="summaryBar">
+        <div class="summary-item">
+            <span class="summary-num" id="totalSeatsAll">0</span>
+            <span class="summary-label">总座位</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-num summary-green" id="availableSeatsAll">0</span>
+            <span class="summary-label">空闲座位</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-num summary-red" id="occupiedSeatsAll">0</span>
+            <span class="summary-label">已占用</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-num" id="occupancyRate">0%</span>
+            <span class="summary-label">使用率</span>
+        </div>
+    </div>
+
+    <!-- 楼层卡片网格 -->
+    <div class="floor-grid" id="floorGrid">
+        <!-- JS 动态生成楼层卡片 -->
+    </div>
+</section>
+
+<!-- ==================== 核心板块2：楼层空位详情查询区 ==================== -->
+<section class="section" id="floor-detail">
+    <div class="section-header">
+        <h2 class="section-title">🗺️ 楼层座位详情</h2>
+    </div>
+    <p class="section-desc">点击下方楼层名称或上方楼层卡片，查看座位可视化布局</p>
+
+    <!-- 楼层选择标签 -->
+    <div class="floor-tabs" id="floorTabs">
+        <!-- JS 动态生成楼层标签 -->
+    </div>
+
+    <!-- 座位可视化区域 -->
+    <div class="seat-map-container" id="seatMapContainer">
+        <div class="seat-map-header">
+            <h3 class="seat-map-title" id="seatMapTitle">请选择楼层</h3>
+            <div class="seat-legend">
+                <span class="legend-item"><span class="legend-dot legend-green"></span>空闲</span>
+                <span class="legend-item"><span class="legend-dot legend-yellow"></span>已预约</span>
+                <span class="legend-item"><span class="legend-dot legend-red"></span>已占用</span>
+                <span class="legend-item"><span class="legend-dot legend-blue"></span>已选中</span>
+            </div>
+        </div>
+
+        <!-- 阅览桌/书架等布局示意 -->
+        <div class="library-layout">
+            <div class="layout-shelf">📖 书架区</div>
+            <div class="seat-map" id="seatMap">
+                <p class="seat-map-placeholder">👆 请先选择一个楼层</p>
+            </div>
+            <div class="layout-shelf">📖 书架区</div>
+        </div>
+
+        <!-- 楼层信息条 -->
+        <div class="floor-info-bar" id="floorInfoBar" style="display:none;">
+            <span class="floor-info-item">总座位：<strong id="floorTotal">0</strong></span>
+            <span class="floor-info-item">空闲：<strong id="floorAvail" class="text-green">0</strong></span>
+            <span class="floor-info-item">已预约：<strong id="floorReserved" class="text-yellow">0</strong></span>
+            <span class="floor-info-item">已占用：<strong id="floorOccupied" class="text-red">0</strong></span>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== 核心板块3：座位预约交互区 ==================== -->
+<section class="section" id="reserve">
+    <div class="section-header">
+        <h2 class="section-title">📝 座位预约</h2>
+    </div>
+    <p class="section-desc">选中空闲座位后，设置预约时长即可发起临时预约，满足短暂离座锁座需求</p>
+
+    <div class="reserve-panel">
+        <!-- 已选座位展示 -->
+        <div class="reserve-selected">
+            <div class="reserve-selected-info">
+                <span class="reserve-selected-label">当前选中座位：</span>
+                <span class="reserve-selected-seat" id="selectedSeatDisplay">未选择座位</span>
+            </div>
+        </div>
+
+        <!-- 预约时长选择 -->
+        <div class="reserve-duration">
+            <span class="reserve-duration-label">预约时长：</span>
+            <div class="duration-options" id="durationOptions">
+                <button class="duration-btn" data-minutes="15">15 分钟</button>
+                <button class="duration-btn active" data-minutes="30">30 分钟</button>
+                <button class="duration-btn" data-minutes="45">45 分钟</button>
+                <button class="duration-btn" data-minutes="60">60 分钟</button>
+            </div>
+        </div>
+
+        <!-- 预约按钮 -->
+        <button class="btn-reserve" id="btnReserve" disabled>
+            确认预约
+        </button>
+    </div>
+</section>
+
+<!-- ==================== 底部：使用说明小贴士 ==================== -->
+<footer class="section tips-section" id="tips">
+    <h2 class="section-title">📌 使用须知</h2>
+    <div class="tips-grid">
+        <div class="tip-card">
+            <span class="tip-icon">🎨</span>
+            <h4>颜色说明</h4>
+            <p>绿色代表空闲座位，可直接选择；黄色代表已被预约；红色代表正在使用中。</p>
+        </div>
+        <div class="tip-card">
+            <span class="tip-icon">⏰</span>
+            <h4>短时预约</h4>
+            <p>临时离开（喝水、取书、如厕）时可发起 15~60 分钟短时预约，座位将被锁定。</p>
+        </div>
+        <div class="tip-card">
+            <span class="tip-icon">🔄</span>
+            <h4>数据刷新</h4>
+            <p>点击"刷新数据"按钮可手动更新各楼层空位情况，获取最新座位状态。</p>
+        </div>
+        <div class="tip-card">
+            <span class="tip-icon">💡</span>
+            <h4>智能推荐</h4>
+            <p>系统自动推荐空位最多、人流量最低的楼层，帮助您快速找到最佳自习位置。</p>
+        </div>
+        <div class="tip-card">
+            <span class="tip-icon">📱</span>
+            <h4>多端适配</h4>
+            <p>本页面完美适配手机与电脑，浏览器直接打开即可使用，无需下载安装。</p>
+        </div>
+        <div class="tip-card">
+            <span class="tip-icon">⚠️</span>
+            <h4>温馨提示</h4>
+            <p>本系统为前端模拟演示版本，座位数据为虚拟数据，实际使用请以图书馆真实系统为准。</p>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <p>Workbody · 图书馆空位查询与预约轻量化网页 | 面向在校大学生 | 浏览器直接打开 · 免下载</p>
+    </div>
+</footer>
+
+<!-- ==================== 楼层详情弹窗（备用，点击楼层卡片弹出） ==================== -->
+<div class="modal-overlay" id="floorModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">楼层座位详情</h3>
+            <button class="modal-close" id="modalClose">✕</button>
+        </div>
+        <div class="modal-body" id="modalBody">
+            <!-- 弹窗内容动态生成 -->
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 预约结果提示弹窗 ==================== -->
+<div class="modal-overlay" id="resultModal">
+    <div class="modal-content modal-sm">
+        <div class="modal-body modal-result" id="resultBody">
+            <!-- 结果内容动态生成 -->
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 返回顶部按钮 ==================== -->
+<button class="back-to-top" id="backToTop" aria-label="返回顶部">↑</button>
+
+<script src="script.js"></script>
+</body>
+</html>
